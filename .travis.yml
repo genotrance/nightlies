@@ -1,5 +1,8 @@
 language: c
 
+services:
+  - docker
+
 env:
   - NIMBRANCH=devel ARCH=64
   - NIMBRANCH=devel ARCH=32
@@ -9,14 +12,14 @@ env:
 os:
   - linux
   - osx
-  - windows
+  # - windows
 
 matrix:
   exclude:
-    - os: linux
-      env: NIMBRANCH=devel ARCH=32
-    - os: linux
-      env: NIMBRANCH=version-0-19 ARCH=32
+    # - os: linux
+      # env: NIMBRANCH=devel ARCH=32
+    # - os: linux
+      # env: NIMBRANCH=version-0-19 ARCH=32
     - os: osx
       env: NIMBRANCH=devel ARCH=32
     - os: osx
@@ -130,6 +133,8 @@ install:
       echo "travis_fold:end:koch_boot"
 
       export PATH="${NIMDIR}/bin:${PATH}"
+      export DEPLOY_VERSION="$(nim --version | head -n 1 | perl -pe 's/.*Version ([0-9.]+).*/\1/')"
+
       if [[ "$TRAVIS_OS_NAME" == "windows" ]]
       then
         echo "travis_fold:start:winrelease"
@@ -147,17 +152,28 @@ install:
         ./koch doc
         echo "travis_fold:end:koch_doc"
 
-        echo "travis_fold:start:koch_csource"
-        ./koch csource -d:release
-        echo "travis_fold:end:koch_csource"
+        if [[ "$TRAVIS_OS_NAME" == "linux" ]]
+        then
+          # Don't use testinstall for Linux
+          echo "travis_fold:start:koch_csource"
+          ./koch csource -d:release
+          echo "travis_fold:end:koch_csource"
 
-        echo "travis_fold:start:koch_xz"
-        ./koch xz -d:release
-        echo "travis_fold:end:koch_xz"
+          echo "travis_fold:start:koch_xz"
+          ./koch xz -d:release
+          echo "travis_fold:end:koch_xz"
 
-        echo "travis_fold:start:koch_testinstall"
-        ./koch testinstall
-        echo "travis_fold:start:koch_testinstall"
+          # Use HBB to build generic Linux binaries
+          cp $TRAVIS_BUILD_DIR/hbb.sh build/.
+          ls -l build
+          docker run -t -i -e VERSION=$DEPLOY_VERSION -e ARCH=$ARCH --rm -v `pwd`/build:/io phusion/holy-build-box-$ARCH:latest bash /io/hbb.sh
+          ls -l build
+        else
+          # testinstall does csource and xz today
+          echo "travis_fold:start:koch_testinstall"
+          ./koch testinstall
+          echo "travis_fold:start:koch_testinstall"
+        fi
       fi
       # After building nim, wipe csources to save on cache space.
       rm -rf csources
@@ -180,7 +196,6 @@ script:
   - nim --version
 
 before_deploy:
-  - export DEPLOY_VERSION="$(nim --version | head -n 1 | perl -pe 's/.*Version ([0-9.]+).*/\1/')"
   - |
     if [[ "$TRAVIS_OS_NAME" == "windows" ]]
     then
