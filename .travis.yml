@@ -176,9 +176,12 @@ install:
           docker run -t -i -e VERSION=$DEPLOY_VERSION -e ARCH=$ARCH --rm -v `pwd`/build:/io phusion/holy-build-box-$ARCH:latest bash /io/hbb.sh
 
           # Test binaries
-          cd $TMPDIR
+          cd /tmp
+          pwd
           tar -xJf "$NIMDIR/build/$ASSETFILE"
           cd nim-$DEPLOY_VERSION
+          pwd
+          ls -lR
           export PATH="${OLDPATH}"
           ./bin/nim c koch.nim
           ./koch docs
