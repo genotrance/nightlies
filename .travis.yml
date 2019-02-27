@@ -12,14 +12,10 @@ env:
 os:
   - linux
   - osx
-  # - windows
+  - windows
 
 matrix:
   exclude:
-    # - os: linux
-      # env: NIMBRANCH=devel ARCH=32
-    # - os: linux
-      # env: NIMBRANCH=version-0-19 ARCH=32
     - os: osx
       env: NIMBRANCH=devel ARCH=32
     - os: osx
@@ -132,8 +128,20 @@ install:
       ./koch boot -d:release
       echo "travis_fold:end:koch_boot"
 
+      export OLDPATH="${PATH}"
       export PATH="${NIMDIR}/bin:${PATH}"
       export DEPLOY_VERSION="$(nim --version | head -n 1 | perl -pe 's/.*Version ([0-9.]+).*/\1/')"
+      if [[ "$TRAVIS_OS_NAME" == "windows" ]]
+      then
+        export ZIPSUFFIX="_x${ARCH}.zip"
+      elif [[ "$TRAVIS_OS_NAME" == "linux" ]]
+      then
+        export ZIPSUFFIX="_x${ARCH}.tar.xz"
+      else
+        export ZIPSUFFIX=".tar.xz"
+      fi
+
+      export ASSETFILE="nim-${DEPLOY_VERSION}-${TRAVIS_OS_NAME}${ZIPSUFFIX}"
 
       if [[ "$TRAVIS_OS_NAME" == "windows" ]]
       then
@@ -165,9 +173,19 @@ install:
 
           # Use HBB to build generic Linux binaries
           cp $TRAVIS_BUILD_DIR/hbb.sh build/.
-          ls -l build
           docker run -t -i -e VERSION=$DEPLOY_VERSION -e ARCH=$ARCH --rm -v `pwd`/build:/io phusion/holy-build-box-$ARCH:latest bash /io/hbb.sh
-          ls -l build
+
+          # Test binaries
+          cd $TMPDIR
+          tar -xJf "$NIMDIR/build/$ASSETFILE"
+          cd nim-$DEPLOY_VERSION
+          export PATH="${OLDPATH}"
+          ./bin/nim c koch.nim
+          ./koch docs
+          export NIM_EXE_NOT_IN_PATH=NOT_IN_PATH
+          ./koch tests --nim:./bin/nim cat megatest
+          export PATH="${NIMDIR}/bin:${PATH}"
+          cd $NIMDIR
         else
           # testinstall does csource and xz today
           echo "travis_fold:start:koch_testinstall"
@@ -199,16 +217,10 @@ before_deploy:
   - |
     if [[ "$TRAVIS_OS_NAME" == "windows" ]]
     then
-      export ZIPSUFFIX="_x${ARCH}.zip"
-    else
-      export ZIPSUFFIX=".tar.xz"
-    fi
-
-  - export ASSETFILE="nim-${DEPLOY_VERSION}-${TRAVIS_OS_NAME}${ZIPSUFFIX}"
-  - |
-    if [[ "$TRAVIS_OS_NAME" == "windows" ]]
-    then
       cp -f "${NIMDIR}/web/upload/download/nim-${DEPLOY_VERSION}${ZIPSUFFIX}" "${ASSETFILE}"
+    elif [[ "$TRAVIS_OS_NAME" == "linux" ]]
+    then
+      cp -f "${NIMDIR}/build/$ASSETFILE" "${ASSETFILE}"
     else
       cp -f "${NIMDIR}/build/nim-${DEPLOY_VERSION}${ZIPSUFFIX}" "${ASSETFILE}"
     fi
