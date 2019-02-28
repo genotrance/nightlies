@@ -21,7 +21,7 @@ unset LDFLAGS
 wget https://ftp.pcre.org/pub/pcre/pcre-8.43.tar.gz
 tar xvzf pcre-8.43.tar.gz
 cd pcre-8.43
-./configure --prefix=/usr --disable-static
+./configure --prefix=/hbb --disable-static
 make && make install
 cd ..
 export LDFLAGS=$OLDLDFLAGS
