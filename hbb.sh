@@ -17,9 +17,7 @@ yum -y install wget xz || yum clean all
 
 # PCRE
 export OLDLDFLAGS=$LDFLAGS
-export OLDCFLAGS=$CFLAGS
-export LDFLAGS="-L/hbb_exe/lib"
-export CFLAGS="$CFLAGS -fPIC"
+unset LDFLAGS
 wget https://ftp.pcre.org/pub/pcre/pcre-8.43.tar.gz
 tar xvzf pcre-8.43.tar.gz
 cd pcre-8.43
@@ -27,7 +25,6 @@ cd pcre-8.43
 make && make install
 cd ..
 export LDFLAGS=$OLDLDFLAGS
-export CFLAGS=$OLDCFLAGS
 
 # Extract and enter source
 tar -xJf /io/$SRCFILE
