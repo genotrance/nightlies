@@ -13,7 +13,7 @@ source /hbb_exe/activate
 set -x
 
 # Install xz
-yum -y install wget xz || yum clean all
+yum -y install openssl pcre wget xz || yum clean all
 
 # Extract and enter source
 tar -xJf /io/$SRCFILE
