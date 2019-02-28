@@ -16,12 +16,15 @@ set -x
 yum -y install wget xz || yum clean all
 
 # PCRE
+export OLDLDFLAGS=$LDFLAGS
+export LDFLAGS="-L/hbb_exe/lib -fPIC"
 wget https://ftp.pcre.org/pub/pcre/pcre-8.43.tar.gz
 tar xvzf pcre-8.43.tar.gz
 cd pcre-8.43
 ./configure --prefix=/usr
 make && make install
 cd ..
+export LDFLAGS=$OLDLDFLAGS
 
 # Extract and enter source
 tar -xJf /io/$SRCFILE
