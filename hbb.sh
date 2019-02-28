@@ -16,7 +16,12 @@ set -x
 yum -y install wget xz || yum clean all
 
 # PCRE
-ln -sf /lib/libpcre.so.0 /lib/libpcre.so.1
+wget https://ftp.pcre.org/pub/pcre/pcre-8.43.tar.gz
+tar xvzf pcre-8.43.tar.gz
+cd pcre-8.43
+./configure --prefix=/usr
+make && make install
+cd ..
 
 # Extract and enter source
 tar -xJf /io/$SRCFILE
