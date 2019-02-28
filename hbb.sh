@@ -42,3 +42,10 @@ rm -f /io/$BINFILE.xz
 cd ..
 tar cf $BINFILE nim-$VERSION
 xz -9fc $BINFILE > /io/$BINFILE.xz
+
+# Test binaries
+cd nim-$VERSION
+./bin/nim c koch.nim
+./koch docs
+export NIM_EXE_NOT_IN_PATH=NOT_IN_PATH
+./koch tests --nim:./bin/nim cat megatest

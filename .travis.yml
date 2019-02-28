@@ -171,24 +171,9 @@ install:
           ./koch xz -d:release
           echo "travis_fold:end:koch_xz"
 
-          # Use HBB to build generic Linux binaries
+          # Use HBB to build and test generic Linux binaries
           cp $TRAVIS_BUILD_DIR/hbb.sh build/.
           docker run -t -i -e VERSION=$DEPLOY_VERSION -e ARCH=$ARCH --rm -v `pwd`/build:/io phusion/holy-build-box-$ARCH:latest bash /io/hbb.sh
-
-          # Test binaries
-          cd /tmp
-          pwd
-          tar -xJf "$NIMDIR/build/$ASSETFILE"
-          cd nim-$DEPLOY_VERSION
-          pwd
-          ls -lR
-          export PATH="${OLDPATH}"
-          ./bin/nim c koch.nim
-          ./koch docs
-          export NIM_EXE_NOT_IN_PATH=NOT_IN_PATH
-          ./koch tests --nim:./bin/nim cat megatest
-          export PATH="${NIMDIR}/bin:${PATH}"
-          cd $NIMDIR
         else
           # testinstall does csource and xz today
           echo "travis_fold:start:koch_testinstall"
