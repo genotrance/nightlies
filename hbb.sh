@@ -13,7 +13,10 @@ source /hbb_exe/activate
 set -x
 
 # Install xz
-yum -y install libpcre3 wget xz || yum clean all
+yum -y install wget xz || yum clean all
+
+# PCRE
+ln -sf /lib/libpcre.so.0 /lib/libpcre.so.1
 
 # Extract and enter source
 tar -xJf /io/$SRCFILE
